@@ -51,7 +51,7 @@ const CodeSnippetForm = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3001/api/snippets",
+        "https://tuf-assignment-backend-xxth.onrender.com/api/snippets",
         dataToSend,
         {
           headers: {

@@ -13,7 +13,7 @@ const CodeSnippetTable = () => {
     setLoading(true);
 
     const response = await axios.get(
-      `http://localhost:3001/api/snippets?page=${page}&per_page=${perPage}`
+      `https://tuf-assignment-backend-xxth.onrender.com/api/snippets?page=${page}&per_page=${perPage}`
     );
     const decodedSnippets = response.data.records.map((snippet) => ({
       ...snippet,
