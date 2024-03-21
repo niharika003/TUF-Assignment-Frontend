@@ -1,5 +1,5 @@
 // Construct a form to gather the following fields: username, preferred code language (C++, Java, JavaScript, Python), standard input (stdin), and the source code.
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
@@ -7,6 +7,7 @@ import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
 import { python } from "@codemirror/lang-python";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
+import { useNavigate } from "react-router-dom";
 
 const languageFunctionMapping = {
   cpp,
@@ -16,10 +17,12 @@ const languageFunctionMapping = {
 };
 
 const CodeSnippetForm = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     language: "JavaScript",
     stdin: "",
+    stdout: "",
     source_code: "",
   });
 
@@ -31,7 +34,9 @@ const CodeSnippetForm = () => {
 
     if (name === "language") {
       const newCodeMode =
-        languageFunctionMapping[value.toLowerCase()] || javascript;
+        languageFunctionMapping[
+          value === "C++" ? "cpp" : value.toLowerCase()
+        ] || javascript;
       setCodeMode(() => newCodeMode);
     }
   };
@@ -45,13 +50,34 @@ const CodeSnippetForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setFormData({ ...formData, stdout: "Executing..." });
+    let codeOutput;
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/execute-code`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      codeOutput = response.data.stdout;
+      setFormData({ ...formData, stdout: response.data.stdout });
+    } catch (error) {
+      setFormData({ ...formData, stdout: "Error!" });
+      console.error("Failed to execute code: ", error);
+    }
     const encodedSourceCode = btoa(formData.source_code);
-    const dataToSend = { ...formData, source_code: encodedSourceCode };
+    const dataToSend = {
+      ...formData,
+      source_code: encodedSourceCode,
+      stdout: codeOutput,
+    };
 
     try {
       const response = await axios.post(
-        "https://tuf-assignment-backend-xxth.onrender.com/api/snippets",
+        `${import.meta.env.VITE_API_BASE_URL}/snippets`,
         dataToSend,
         {
           headers: {
@@ -59,12 +85,12 @@ const CodeSnippetForm = () => {
           },
         }
       );
-      // Handle success (e.g., clear form, show success message)
       setFormData({
         username: "",
         language: "JavaScript",
         stdin: "",
         source_code: "",
+        stdout: "",
       });
     } catch (error) {
       console.error("Failed to submit code snippet:", error);
@@ -130,12 +156,34 @@ const CodeSnippetForm = () => {
           onChange={onCodeChange}
         />
       </div>
-      <button
-        type="submit"
-        className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-      >
-        Submit
-      </button>
+      <div className="mb-5">
+        <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          Standard Output:
+        </label>
+        <textarea
+          rows="4"
+          className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          value={formData.stdout}
+          disabled={true}
+        />
+      </div>
+      <div className="flex flex-row justify-between">
+        <button
+          type="submit"
+          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:cursor-disabled"
+          disabled={formData.stdout === "Executing..."}
+        >
+          Submit
+        </button>
+        <button
+          onClick={() => {
+            navigate("/page2");
+          }}
+          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        >
+          View Submissions
+        </button>
+      </div>
     </form>
   );
 };

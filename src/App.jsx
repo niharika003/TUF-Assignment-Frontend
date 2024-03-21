@@ -1,11 +1,16 @@
-import { useState } from "react";
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
 import "./App.css";
-import CodeSnippetForm from "./pages/Page1";
-import CodeSnippetTable from "./pages/Page2";
+import AllRoutes from "./routes";
 
 function App() {
-  // return <CodeSnippetForm />;
-  return <CodeSnippetTable />;
+  return (
+    <>
+      <BrowserRouter>
+        <AllRoutes />
+      </BrowserRouter>
+    </>
+  );
 }
 
 export default App;
