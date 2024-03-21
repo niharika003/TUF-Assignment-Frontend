@@ -8,6 +8,7 @@ import { java } from "@codemirror/lang-java";
 import { python } from "@codemirror/lang-python";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const languageFunctionMapping = {
   cpp,
@@ -65,9 +66,15 @@ const CodeSnippetForm = () => {
       codeOutput = response.data.stdout;
       setFormData({ ...formData, stdout: response.data.stdout });
     } catch (error) {
+      if (error.response.status === 503) {
+        toast.error(error.response.data.judgeError);
+        console.log(error.response.data);
+      }
       setFormData({ ...formData, stdout: "Error!" });
       console.error("Failed to execute code: ", error);
     }
+    if (!codeOutput) return;
+
     const encodedSourceCode = btoa(formData.source_code);
     const dataToSend = {
       ...formData,
