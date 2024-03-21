@@ -1,4 +1,4 @@
-// Construct a form to gather the following fields: username,  preferred code language (C++, Java, JavaScript, Python), standard input (stdin), and the source code.
+// Construct a form to gather the following fields: username, preferred code language (C++, Java, JavaScript, Python), standard input (stdin), and the source code.
 import React, { useCallback, useState } from "react";
 import axios from "axios";
 import CodeMirror from "@uiw/react-codemirror";
